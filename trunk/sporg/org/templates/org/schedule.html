@@ -1,0 +1,26 @@
+{% extends "org/base.html" %}
+{% block page-content %}
+{% if schedule_list %}
+    <table>
+	<th>Day</th>
+	<th>Date</th>
+	<th>Time</th>
+	<th>Home Team</th>
+	<th>Away Team</th>
+	<th>Field</th>
+    {% for object in schedule_list %}
+        <tr>
+	     <td>{{object.time_start|date:"D"}}</td>
+	     <td>{{object.time_start|date:"M d,Y"}}</td>
+	     <td>{{object.time_start|date:"h:i a"}}</td>
+	     <td><a href="/org/{{object.team1.division.league.id}}/league/{{object.team1.id}}/team/">{{ object.team1.name }}</a></td>
+	     <td><a href="/org/{{object.team2.division.league.id}}/league/{{object.team2.id}}/team/">{{ object.team2.name }}</a></td>
+	     <td><a href="http://maps.google.com/maps?daddr={{object.venue.address1|urlencode}},{{object.venue.city|urlencode}},{{object.venue.state|urlencode}}">{{object.venue.name}}</a></td>
+	     
+	</tr>
+    {% endfor %}
+    </table>
+{% else %}
+    <p>No games are available.</p>
+{% endif %}
+{% endblock %}
