@@ -1,0 +1,10 @@
+{% extends "org/base.html" %}
+{% block page-content %}
+{% if player %}
+    <h1>{{league}} - Team: {{team}}</h1>
+    <h3>{{ player.first_name }} {{player.last_name }}
+
+{% else %}
+    <p>This team is not available.</p>
+{% endif %}
+{% endblock %}

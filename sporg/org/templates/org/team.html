@@ -1,0 +1,13 @@
+{% extends "org/base.html" %}
+{% block page-content %}
+{% if player_list %}
+    <h1>{{league}} - Team: {{team}}</h1>
+    <ul>
+    {% for tp in player_list %}
+        <li><a href="{{tp.player.id}}/player/">{{ tp.player.first_name }} {{ tp.player.last_name }}</a></li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>Team roster is not available.</p>
+{% endif %}
+{% endblock %}
