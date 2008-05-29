@@ -27,15 +27,16 @@ def get_game_context(league_id = None, team_id = None):
             game_context += '/' + team_id + '/team'
     return game_context
 
-def schedule(league_id = None, team_id=None):
+def schedule(request, league_id = None, team_id=None):
     tq = Q(event_type='G', time_start__gte=date.today())
     schedule_list, announcements  = schedule_helper(tq, league_id, team_id)
     game_context = get_game_context(league_id, team_id) 
     return render_to_response('org/schedule.html', {'schedule_list': schedule_list,
                                                     'announcements': announcements,
+                                                    'is_staff': is_staff(request),
                                                     'game_context' : game_context})
 
-def results(league_id = None, team_id=None):
+def results(request, league_id = None, team_id=None):
     tq = Q(event_type='G', time_start__lte=date.today())
     schedule_list, announcements = schedule_helper(tq, league_id, team_id)
     for s in schedule_list:
@@ -48,12 +49,13 @@ def results(league_id = None, team_id=None):
     game_context = get_game_context(league_id, team_id)
     return render_to_response('org/results.html', {'schedule_list': schedule_list,
                                                    'announcements': announcements,
+                                                   'is_staff': is_staff(request),
                                                    'game_context' : game_context})
     
-def standings(league_id=None, team_id=None):
+def standings(request, league_id=None, team_id=None):
     standings_list = []
     if league_id != None:
-        st = standings_helper(league_id, team_id)
+        st = standings_helper(league_id)
         announcements = st['announcements']
         game_context = st['game_context']
         standings_list.append(st)
@@ -65,6 +67,7 @@ def standings(league_id=None, team_id=None):
         game_context = get_game_context()
     return render_to_response('org/standings.html', {'standings_list': standings_list,
                                                      'announcements': announcements,
+                                                     'is_staff': is_staff(request),
                                                      'game_context' : game_context})
                                                      
     
@@ -132,36 +135,41 @@ def schedule_helper(tq, league_id = None, team_id=None):
 
 
 def schedule0(request):
-    return schedule()
+    return schedule(request)
 
 def schedule1(request, league_id):
-    return schedule(league_id)
+    return schedule(request, league_id)
 
 def schedule2(request, league_id, team_id):
-    return schedule(league_id, team_id)
+    return schedule(request, league_id, team_id)
 
 def results0(request):
-    return results()
+    return results(request)
 
 def results1(request, league_id):
-    return results(league_id)
+    return results(request, league_id)
 
 def results2(request, league_id, team_id):
-    return results(league_id, team_id)
+    return results(request, league_id, team_id)
 
 def standings0(request):
-    return standings()
+    return standings(request)
 
 def standings1(request, league_id):
-    return standings(league_id)
+    return standings(request, league_id)
 
 def standings2(request, league_id, team_id):
-    return standings(league_id, team_id)
-    
+    return standings(request, league_id, team_id)
+
+def is_staff(request):
+    return request.user.is_authenticated() and request.user.is_staff
+
 def index(request):
     league_list = League.objects.all().order_by('name')
     announcements = get_announcements()
-    return render_to_response('org/index.html', {'league_list': league_list, 'announcements': announcements})
+    return render_to_response('org/index.html', {'league_list': league_list,
+                                                 'is_staff': is_staff(request),
+                                                 'announcements': announcements})
 
 def league(request, league_id):
     try:
@@ -172,12 +180,13 @@ def league(request, league_id):
             team_list = Team.objects.filter(division=division.id)
             out_list.append((division, team_list))
         announcements = get_announcements(league_name=league.name)
-        game_context = league_id + '/league'
+        game_context = get_game_context(league_id)
     except League.DoesNotExist:
         raise Http404
     return render_to_response('org/league.html', {'league': league,
                                                   'out_list': out_list,
                                                   'announcements': announcements,
+                                                  'is_staff': is_staff(request),
                                                   'game_context': game_context
                                                   })
 
@@ -187,13 +196,14 @@ def team(request, league_id, team_id):
         team = Team.objects.get(pk=team_id)
         player_list = Team_player.objects.filter(team=team_id)
         announcements = get_announcements(league_name=league.name, team_name=team.name)
-        game_context = league_id + '/league/' + team_id + '/team'
+        game_context = get_game_context(league_id, team_id)
     except Team.DoesNotExist:
         raise Http404
     return render_to_response('org/team.html', {'league': league,
                                                 'team': team,
                                                 'player_list':player_list,
                                                 'game_context': game_context,
+                                                'is_staff': is_staff(request),
                                                 'announcements': announcements})
 
 def player(request, league_id, team_id, player_id):
@@ -207,6 +217,7 @@ def player(request, league_id, team_id, player_id):
     return render_to_response('org/player.html', {'league': league,
                                                   'team': team,
                                                   'player':player,
+                                                  'is_staff': is_staff(request),
                                                   'announcements': announcements})
 
 def announcement1(request, announcement_id):
@@ -261,11 +272,12 @@ def build_schedule(request, league_id):
                     break
                 
         announcements = get_announcements(league_name=league.name)
-        game_context = league_id + '/league'
+        game_context = get_game_context(league_id)
     except:
         raise Http404
     return render_to_response('org/new_schedule.html', {'events': events,
                                                         'game_context': game_context,
+                                                        'is_staff': is_staff(request),
                                                         'announcements': announcements})
 
 def drange(d, e):
@@ -288,6 +300,7 @@ def build_availability(request, league_id):
     return render_to_response('org/venue_availability.html', {'day_list': day_list,
                                                               'venue_list': venue_list,
                                                               'league_id': league_id,
+                                                              'is_staff': is_staff(request),
                                                               'announcements': announcements})
 
 def is_overlap(s, e, v):

@@ -20,10 +20,12 @@
 	<th><a href=/org/{{game_context}}/results>Results</a></th>
 	<th>|</th>
 	<th><a href=/org/{{game_context}}/standings>Standings</a></th>
+	{% if is_staff %}
 	<th>|</th>
 	<th><a href=/org/{{game_context}}/build_schedule>Build Schedule</a></th>
 	<th>|</th>
 	<th><a href=/org/{{game_context}}/build_availability>Venue Availability Setup</a></th>
+	{% endif %}
 </tr></table>
 {% endblock %}
 {% block extrahead %}
