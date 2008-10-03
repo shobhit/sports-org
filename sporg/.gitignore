@@ -1,6 +1,9 @@
 *.pyc
 *.*~
+*.*#
 *.patch
 *.db
 *.zip
+appengine_django*
+google_appengine*
 
