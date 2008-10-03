@@ -1,0 +1,18 @@
+{% extends "org/base.html" %}
+{% block page-content %}
+{% if out_list %}
+    <h1>{{league}}</h1>
+    <ul>
+    {% for division in out_list %}
+        <li><a href="{{division.0.id}}/division/">{{ division.0.name }}</a></li>
+	<ul>
+	{% for team in division.1 %}
+		<li><a href="{{team.id}}/team/">{{team.name}}</a></li>
+	{% endfor %}
+	</ul>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No divisions are available.</p>
+{% endif %}
+{% endblock %}

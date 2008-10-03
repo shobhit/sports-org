@@ -1,0 +1,23 @@
+{% extends "org/base.html" %}
+{% block page-content %}
+{% if events %}
+    <table>
+	<th>Home Team</th>
+	<th>Away Team</th>
+	<th>Field</th>
+	<th>Date</th>
+	<th>Time</th>
+    {% for event in events %}
+        <tr>
+	     <td><a href="/org/{{event.team1.division.league.id}}/league/{{event.team1.id}}/team/">{{ event.team1.name }}</a></td>
+	     <td><a href="/org/{{event.team2.division.league.id}}/league/{{event.team2.id}}/team/">{{ event.team2.name }}</a></td>
+	     <td>{{event.venue.name}}</td>
+	     <td>{{event.time_start|date:"M d,Y"}}</td>
+	     <td>{{event.time_start|date:"h:i a"}}</td>
+	</tr>
+    {% endfor %}
+    </table>
+{% else %}
+    <p>No games are available.</p>
+{% endif %}
+{% endblock %}
