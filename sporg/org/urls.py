@@ -1,6 +1,6 @@
 from django.conf.urls.defaults import *
 
-urlpatterns = patterns('sporg.org.views',
+urlpatterns = patterns('org.views',
      (r'^$', 'index'),
      (r'^(?P<league_id>\d+)/league/$', 'league'),
      (r'^(?P<division_id>\d+)/division/$', 'division'),
