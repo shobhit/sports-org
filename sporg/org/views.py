@@ -29,31 +29,29 @@ def get_game_context(league_id = None, team_id = None):
             game_context += '/' + team_id + '/team'
     return game_context
 
-##def schedule(request, league_id = None, team_id=None):
-##    tq = Q(event_type='G', time_start__gte=date.today())
-##    schedule_list, announcements  = schedule_helper(tq, league_id, team_id)
-##    game_context = get_game_context(league_id, team_id) 
-##    return render_to_response('org/schedule.html', {'schedule_list': schedule_list,
-##                                                    'announcements': announcements,
-##                                                    'is_staff': is_staff(request),
-##                                                    'game_context' : game_context})
-##
-##def results(request, league_id = None, team_id=None):
-##    tq = Q(event_type='G', time_start__lte=date.today())
-##    schedule_list, announcements = schedule_helper(tq, league_id, team_id)
-##    for s in schedule_list:
-##        if s.team1_points > s.team2_points:
-##            s.team1_winner = True
-##            s.team2_winner = False
-##        else:
-##            s.team2_winner = True
-##            s.team1_winner = False
-##    game_context = get_game_context(league_id, team_id)
-##    return render_to_response('org/results.html', {'schedule_list': schedule_list,
-##                                                   'announcements': announcements,
-##                                                   'is_staff': is_staff(request),
-##                                                   'game_context' : game_context})
-##    
+def schedule(request, league_id = None, team_id=None):
+    schedule_list, announcements  = schedule_helper('>', league_id, team_id)
+    game_context = get_game_context(league_id, team_id) 
+    return render_to_response('org/schedule.html', {'schedule_list': schedule_list,
+                                                    'announcements': announcements,
+                                                    'is_staff': is_staff(request),
+                                                    'game_context' : game_context})
+
+def results(request, league_id = None, team_id=None):
+    schedule_list, announcements = schedule_helper('<', league_id, team_id)
+    for s in schedule_list:
+        if s.team1_points > s.team2_points:
+            s.team1_winner = True
+            s.team2_winner = False
+        else:
+            s.team2_winner = True
+            s.team1_winner = False
+    game_context = get_game_context(league_id, team_id)
+    return render_to_response('org/results.html', {'schedule_list': schedule_list,
+                                                   'announcements': announcements,
+                                                   'is_staff': is_staff(request),
+                                                   'game_context' : game_context})
+    
 ##def standings(request, league_id=None, team_id=None):
 ##    standings_list = []
 ##    if league_id != None:
@@ -74,8 +72,7 @@ def get_game_context(league_id = None, team_id = None):
 ##                                                     
 ##    
 ##def standings_helper(league_id, team_id=None):
-##    tq = Q(event_type='G', time_start__lte=date.today())
-##    schedule_list, announcements = schedule_helper(tq, league_id, team_id)
+##    schedule_list, announcements = schedule_helper('<', league_id, team_id)
 ##    games_won = {}
 ##    games_lost = {}
 ##    for s in schedule_list:
@@ -112,57 +109,75 @@ def get_game_context(league_id = None, team_id = None):
 ##            'announcements': announcements,
 ##            'game_context': game_context
 ##            }
-##
-##def schedule_helper(tq, league_id = None, team_id=None):
-##    league_nm = None
-##    team_nm = None
-##
-##    if team_id != None:
-##        print 'doing team query'
-##        team = Team.objects.get(pk=team_id)
-##        team_nm = team.name
-##        q = Q(team1=team_id) | Q(team2=team_id)
-##        tq = q & tq
-##
-##    schedule_list = Event.objects.filter(tq).order_by('time_start')
-##
-##    if league_id != None:
-##        league = League.objects.get(pk=league_id)
-##        league_nm = league.name
-##        schedule_list = [s for s in schedule_list
-##                         if s.team1.division.league.id == league.id
-##                         or s.team2.division.league.id == league.id]
-##    announcements = get_announcements(league_name=league_nm,team_name=team_nm)
-##    return (schedule_list, announcements)
-##
-##
-##def schedule0(request):
-##    return schedule(request)
-##
-##def schedule1(request, league_id):
-##    return schedule(request, league_id)
-##
-##def schedule2(request, league_id, team_id):
-##    return schedule(request, league_id, team_id)
-##
-##def results0(request):
-##    return results(request)
-##
-##def results1(request, league_id):
-##    return results(request, league_id)
-##
-##def results2(request, league_id, team_id):
-##    return results(request, league_id, team_id)
-##
-##def standings0(request):
-##    return standings(request)
-##
-##def standings1(request, league_id):
-##    return standings(request, league_id)
-##
-##def standings2(request, league_id, team_id):
-##    return standings(request, league_id, team_id)
-##
+
+def set_league_and_team_ids(s):
+    s.team1_id = s.team1.key().id()
+    s.team2_id = s.team2.key().id()
+    s.league1_id = s.team1.division.league.key().id()
+    s.league2_id = s.team2.division.league.key().id()
+    return s
+
+def schedule_helper(comp, league_id = None, team_id=None):
+    schedule_list = Event.all()
+    schedule_list.filter('event_type = ', 'Game')
+    schedule_list.filter('time_start ' + comp, date.today())
+
+    league_nm = None
+    team_nm = None
+
+    if team_id != None:
+        ##print 'doing team query'
+        tid = int(team_id)
+        team = Team.get_by_id(tid)
+        team_nm = team.name
+        def set_team_ids(s):
+            s.team1_id = s.team1.key().id()
+            s.team2_id = s.team2.key().id()
+            return s
+        schedule_list = [set_league_and_team_ids(s) for s in schedule_list
+                         if s.team1.key().id() == tid
+                         or s.team2.key().id() == tid]
+        
+
+    if league_id != None:
+        lid = int(league_id)
+        league = League.get_by_id(lid)
+        league_nm = league.name
+        schedule_list = [set_league_and_team_ids(s) for s in schedule_list
+                         if s.team1.division.league.key().id() == lid
+                         or s.team2.division.league.key().id() == lid]
+    schedule_list.sort(cmp=lambda x, y: cmp(x.time_start,  y.time_start))
+    announcements = get_announcements(league_name=league_nm,team_name=team_nm)
+    return (schedule_list, announcements)
+
+
+def schedule0(request):
+    return schedule(request)
+
+def schedule1(request, league_id):
+    return schedule(request, league_id)
+
+def schedule2(request, league_id, team_id):
+    return schedule(request, league_id, team_id)
+
+def results0(request):
+    return results(request)
+
+def results1(request, league_id):
+    return results(request, league_id)
+
+def results2(request, league_id, team_id):
+    return results(request, league_id, team_id)
+
+def standings0(request):
+    return standings(request)
+
+def standings1(request, league_id):
+    return standings(request, league_id)
+
+def standings2(request, league_id, team_id):
+    return standings(request, league_id, team_id)
+
 def is_staff(request):
     return request.user.is_authenticated() and request.user.is_staff
 

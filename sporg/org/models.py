@@ -193,7 +193,7 @@ class Event(BaseModel):
     team2_points = db.IntegerProperty()
 
     def __str__(self):
-        rval = self.time_start.strftime("%m/%d/%Y") + " " + self.venue.name + " " + self.get_event_type_display() + ": " + self.team1.name
+        rval = self.time_start.strftime("%m/%d/%Y") + " " + self.venue.name + " " + self.event_type + ": " + self.team1.name
         if self.team2 != None:
             rval += " vs. " + self.team2.name
         return rval
