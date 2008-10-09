@@ -117,33 +117,44 @@ def set_league_and_team_ids(s):
     s.league2_id = s.team2.division.league.key().id()
     return s
 
-def schedule_helper(comp, league_id = None, team_id=None):
+def get_base_schedule_query(comp):
     schedule_list = Event.all()
     schedule_list.filter('event_type = ', 'Game')
     schedule_list.filter('time_start ' + comp, date.today())
+    return schedule_list
 
+def schedule_helper(comp, league_id = None, team_id=None):
+    s1 = get_base_schedule_query(comp)
     league_nm = None
     team_nm = None
 
     if team_id != None:
-        ##print 'doing team query'
         tid = int(team_id)
         team = Team.get_by_id(tid)
         team_nm = team.name
-        def set_team_ids(s):
-            s.team1_id = s.team1.key().id()
-            s.team2_id = s.team2.key().id()
-            return s
-        schedule_list = [set_league_and_team_ids(s) for s in schedule_list
-                         if s.team1.key().id() == tid
-                         or s.team2.key().id() == tid]
+        #
+        # what I'd like to be doing here is a filter on schedule_list
+        # that ors together the results of finding all events where
+        # team1 is the team or team2 is the team. Instead I have to
+        # get two full queries, filter each of them by team and append
+        # the second to the first.
+        #
+        s1.filter('team1 = ', team)
+        s2 = get_base_schedule_query(comp).filter('team2 = ', team)
+        schedule_list = [set_league_and_team_ids(s) for s in s1.fetch(1000) + s2.fetch(1000)]
         
-
-    if league_id != None:
+    elif league_id != None:
         lid = int(league_id)
         league = League.get_by_id(lid)
         league_nm = league.name
-        schedule_list = [set_league_and_team_ids(s) for s in schedule_list
+        #
+        # here I'd like to do just what I did above for team, but I can't
+        # figure any way to get a filter like
+        # s1.filter('team1.division.league = ', league)
+        # to work, so I'm just getting the full list, then using a
+        # list comprehension to narrow down the list instead of a filter.
+        #
+        schedule_list = [set_league_and_team_ids(s) for s in s1
                          if s.team1.division.league.key().id() == lid
                          or s.team2.division.league.key().id() == lid]
     schedule_list.sort(cmp=lambda x, y: cmp(x.time_start,  y.time_start))
