@@ -15,7 +15,7 @@
 	     <td>{{object.time_start|date:"h:i a"}}</td>
 	     <td><a href="/org/{{object.league1_id}}/league/{{object.team1_id}}/team/">{{ object.team1.name }}</a></td>
 	     <td><a href="/org/{{object.league2_id}}/league/{{object.team2_id}}/team/">{{ object.team2.name }}</a></td>
-	     <td><a href="http://maps.google.com/maps?daddr={{object.venue.address1|urlencode}},{{object.venue.city|urlencode}},{{object.venue.state|urlencode}}">{{object.venue.name}}</a></td>
+	     <td><a href="http://maps.google.com/maps?daddr={{object.venue.address|urlencode}}">{{object.venue.name}}</a></td>
 	     
 	</tr>
     {% endfor %}

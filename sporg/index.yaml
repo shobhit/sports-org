@@ -10,20 +10,20 @@ indexes:
 # automatically uploaded to the admin console when you next deploy
 # your application using appcfg.py.
 
-# Used 99 times in query history.
+# Used 103 times in query history.
 - kind: Announcement
   properties:
   - name: entity_for_name
   - name: valid_until_date
 
-# Used 3 times in query history.
+# Used 5 times in query history.
 - kind: Event
   properties:
   - name: event_type
   - name: team1
   - name: time_start
 
-# Used once in query history.
+# Used 3 times in query history.
 - kind: Event
   properties:
   - name: event_type
